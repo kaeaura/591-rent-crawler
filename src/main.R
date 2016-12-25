@@ -5,7 +5,6 @@ library('xmlview')
 library('magrittr')
 library('rvest')
 library('dplyr')
-library("googlesheets")
 
 source('utility.R')
 
@@ -112,7 +111,7 @@ file.name <- file.path(output.dir, sprintf('591_candidates_%s.csv', Sys.time() %
 write.csv(batch.res.data, file=file.name, row.names=F)
 
 # register the key
-gs_upload(file.name, sheet_title=)
+#gs_upload(file.name, sheet_title='file.name')
 
 #g <- gs_new('candidates', ws_title='591Candidates', input=batch.res.data, trim=T, verbose=F)
 # Key: 1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs

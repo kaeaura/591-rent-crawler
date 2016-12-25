@@ -7,6 +7,8 @@ library('rvest')
 library('dplyr')
 library("googlesheets")
 
+source('utility.R')
+
 rent.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region=1, section="4,10,11,27", kind2=1, rentprice.more="2,3,4", area="10,30", sex="0",
                        first.row=NULL, total.rows=NULL) {
     # test.run
@@ -82,7 +84,7 @@ total.records <- init.cont$data$page %>%
                  html_text() %>% 
                  as.numeric()
 
-#
+# crawl the results
 step.width <- 30
 first.rows <- seq(from=0, to=total.records, by=step.width)
 
@@ -94,18 +96,25 @@ batch.res <- lapply(first.rows,
                         return(list(status=status_code(r), parsed.content=content(r, "text") %>% jsonlite::fromJSON()))
                     })
 
-batch.res.data <- lapply(batch.res, function(res) {
-                             res$parsed.content$data$data
-                    }) %>% 
+batch.res.data <- lapply(batch.res, function(res) { res$parsed.content$data$data }) %>% 
                   ldply(.id='page.index') %>% 
                   dplyr::filter(closed == 0) %>% 
-                  dplyr::mutate(url = sprintf("https://rent.591.com.tw/rent-detail-%s.html", id)) %>% 
-                  dplyr::select(posttime, browsenum, room, area, price, region_name, section_name, fulladdress, url,
+                  dplyr::mutate(url = get.detail.url(id),
+                                posttime.digit = extract.digits(posttime) %>% as.integer(),
+                                posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels)) %>%
+                  dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, region_name, section_name, fulladdress, url,
                                 id, user_id, post_id, checkstatus, status, closed) %>%
-                  dplyr::distinct(id, .keep_all=T) %>% 
-                  dplyr::arrange(posttime)
+                  dplyr::distinct(id, .keep_all=T) %>%
+                  dplyr::arrange(posttime.unit, posttime.digit)
 
+# store the result and upload to google drive
 file.name <- file.path(output.dir, sprintf('591_candidates_%s.csv', Sys.time() %>% strftime('%F %H:%M')))
-
 write.csv(batch.res.data, file=file.name, row.names=F)
-#gs_upload(file.name)
+
+# register the key
+gs_upload(file.name, sheet_title=)
+
+#g <- gs_new('candidates', ws_title='591Candidates', input=batch.res.data, trim=T, verbose=F)
+# Key: 1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs
+# Alternate key: 1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs
+# Browser URL: https://docs.google.com/spreadsheets/d/1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs/

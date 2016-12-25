@@ -1,0 +1,17 @@
+# folders
+result/
+
+# general
+*.swp
+*.swo
+*.class
+*.log
+*.jar
+
+# R specific
+*.rds
+.Rhistory
+
+# OAuth
+src/.httr-oauth
+

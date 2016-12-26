@@ -1,11 +1,10 @@
-library(shiny)
 library(ggplot2)
 theme_set(theme_bw())
 
 function(input, output, session) {
 
     # Filter data based on selections
-	output$table <- DT::renderDataTable(DT::datatable(batch.res.data, options = list(pageLength=20)))
+	output$table <- DT::renderDataTable(DT::datatable(batch.res.data, options = list(pageLength=10)))
 
 	# Functions
 	table_selected <- reactive({
@@ -18,12 +17,8 @@ function(input, output, session) {
 		batch.res.data[setdiff(1:nrow(batch.res.data), ids),]
 	})
 
-	wrtfun2<-reactive({
-		if (!is.null(input$var1))
-			setwd("../result")
-		sink("outfile.txt")
-		cat()
-		sink()
+	rtext <- eventReactive(input$goButton, { 
+		sprintf("Updated, %d records remained", nrow(batch.res.data))
 	})
 
 	# Interactive
@@ -37,13 +32,24 @@ function(input, output, session) {
 	})
 
 	output$tableSelectedDone <- DT::renderDataTable({
-		done <- DT::datatable(table_not_selected(), 
+		done <- DT::datatable(table_selected(), 
 							  selection = list(mode = "multiple"),
 							  caption = "Done discards",
 							  options = list(paging=F))
+
+		# trigger the button
 		input$goButton
-		done
-		write.csv(done$x$data, file='../../result/shinyoutput.csv', row.names=F)
+		discard.ids <- done$x$data$id
+
+		# update the batch.res.data
+		batch.res.data <<- dplyr::filter(batch.res.data, !(id %in% discard.ids))
+
+		# output the discard records
+		write.csv(done$x$data,
+				  file = file.path("..",
+								   discards.dir,
+								   sprintf("%s %s.csv", discards.fn.prefix, Sys.time())),
+				  row.names = F)
 	})
 
 	output$scatterPlot <- renderPlot({
@@ -54,6 +60,10 @@ function(input, output, session) {
         	g <- g + geom_point(data = data[s,], colour='red', size=6)
 		}
 		g 
+	})
+
+	output$responseText <- renderText({
+		rtext()
 	})
 
 }

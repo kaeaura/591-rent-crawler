@@ -7,9 +7,10 @@ fluidPage(
   navbarPage("Rent candidates", 
 	title = "591 Crawler",
 	tabPanel("Candidates", DT::dataTableOutput("table")),
-	tabPanel("Discards", DT::dataTableOutput("tableSelected")), 
+	tabPanel("Preview", DT::dataTableOutput("tableSelected")), 
 	tabPanel("Summary Plot", plotOutput("scatterPlot")),
-	tabPanel("Update", 
+	tabPanel("Update",
+			 verbatimTextOutput("responseText"),
 			 actionButton("goButton", "Insert discards"),
 			 br(),
 			 DT::dataTableOutput("tableSelectedDone"))

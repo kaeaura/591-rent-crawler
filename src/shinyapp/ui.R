@@ -8,6 +8,6 @@ fluidPage(
 	title = "591 Crawler",
 	tabPanel("Candidates", DT::dataTableOutput("table")),
 	tabPanel("Discards", DT::dataTableOutput("tableSelected")), 
-	tabPanel("Plot", plotOutput("scatterPlot"))
+	tabPanel("Summary Plot", plotOutput("scatterPlot"))
   )
 )

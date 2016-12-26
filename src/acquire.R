@@ -133,11 +133,12 @@ extract_content <- function(res) {
 	if (length(data)) {
 		data1 <- data %>% 
 			ldply(.id='page.index') %>% 
-			dplyr::filter(closed == 0) %>% 
+			dplyr::filter(closed == 0, photoNum >= 1) %>% 
 			dplyr::mutate(url = get.detail.url(id),
 						  posttime.digit = extract.digits(posttime) %>% as.integer(),
-						  posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels)) %>%
-			dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, region_name, section_name, fulladdress, url,
+						  posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels),
+                          price.per.area = as.integer(as.integer(gsub(",", "", price)) / as.numeric(area))) %>%
+			dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, price.per.area, region_name, section_name, fulladdress, url,
 							id, user_id, post_id, checkstatus, status, closed) %>%
 			dplyr::distinct(id, .keep_all=T) %>%
 			dplyr::arrange(posttime.unit, posttime.digit)
@@ -153,12 +154,28 @@ target.url <- 'https://rent.591.com.tw/home/search/rsList'
 crawler.dir <- '../result/crawler'
 if (!file.exists(crawler.dir) || !file.info(crawler.dir)$isdir)
 	dir.create(crawler.dir, recursive = T)
+discards.dir <- '../result/shinyoutput_discards'
+if (!file.exists(discards.dir) || !file.info(discards.dir)$isdir)
+	dir.create(discards.dir)
+discards.fn.prefix <- 'shinyoutput_discards'
 
 # query
-#section.candidates <- c("4", "10", "11", "27")
-section.candidates <- c("4", "27")
+section.candidates <- c("4", "10", "11", "27")
+collection <- lapply(section.candidates,
+                     function(sc) {
+                        message('acquring section = ', sc)
+                        batch.query(url = target.url, section= sc) %>%
+                        extract_content() 
+                    }) %>% 
+               discard.null.elt() %>%
+               ldply()
 
-data <- lapply(section.candidates, function(sc) { batch.query(url = target.url, section= sc) %>% extract_content() }) %>% discard.null.elt() %>% ldply()
+# discarding unwanted cases
+discards.fl <- list.files(crawler.dir, '.csv', full.name=T)
+if (length(discards.fl)) {
+    discards <- lapply(discards.fl, read.csv) %>% ldply() %>% distinct(id, .keep_all=T)
+    collection <- dplyr::filter(collection, !(id %in% discards$id))
+}
 
 # output file
 if (F) {

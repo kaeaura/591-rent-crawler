@@ -171,10 +171,13 @@ collection <- lapply(section.candidates,
                ldply()
 
 # discarding unwanted cases
-discards.fl <- list.files(crawler.dir, '.csv', full.name=T)
+discards.fl <- list.files(discards.dir, '.csv', full.name=T)
 if (length(discards.fl)) {
     discards <- lapply(discards.fl, read.csv) %>% ldply() %>% distinct(id, .keep_all=T)
+    message('we crawl ', nrow(collection), ' records from 591.')
+    message('there are ', length(unique(discards$id)),  ' discards')
     collection <- dplyr::filter(collection, !(id %in% discards$id))
+    message('It leaves ', nrow(collection), ' records after this carwl')
 }
 
 # output file

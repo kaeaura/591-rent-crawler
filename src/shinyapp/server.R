@@ -3,9 +3,6 @@ theme_set(theme_bw())
 
 function(input, output, session) {
 
-    # Filter data based on selections
-	output$table <- DT::renderDataTable(DT::datatable(collection, options = list(pageLength=10)))
-
 	# Functions
 	table_selected <- reactive({
 		ids <- input$table_rows_selected
@@ -22,6 +19,10 @@ function(input, output, session) {
 	})
 
 	# Interactive
+	# candaidates
+	output$table <- DT::renderDataTable(DT::datatable(collection, options = list(pageLength=10)))
+
+	# preview
 	output$tableSelected <- DT::renderDataTable({
 		DT::datatable(
 					  table_selected(),
@@ -30,7 +31,7 @@ function(input, output, session) {
 					  options = list(paging=F)
 					  )
 	})
-
+	# update
 	output$tableSelectedDone <- DT::renderDataTable({
 		done <- DT::datatable(table_selected(), 
 							  selection = list(mode = "multiple"),

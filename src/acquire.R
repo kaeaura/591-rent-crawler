@@ -68,6 +68,18 @@ rent.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region
                 
 }
 
+#rent.query2 <- function(url, ) {
+# httr issues: may not bring the headers correctly
+# solution use RCurl to fix this issue
+
+# success 新北市
+#RCurl::getURL('https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=1&region=1&section=27', httpheader = c('Accept-Language'='en-US,en;q=1.8,zh-TW;q=0.6,zh;q=0.4,ja;q=0.2', 'Accept-Encoding'='gzip, deflate, sdch, br', 'Accept'='text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'user_agent'='Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36', 'Cookie'='urlJumpIp=3; urlJumpIpByTxt=%E6%96%B0%E5%8C%97%E5%B8%82;'))
+
+# success 台北市
+# RCurl::getURL('https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=1&region=1&section=4', httpheader = c('Accept-Language'='en-US,en;q=1.8,zh-TW;q=0.6,zh;q=0.4,ja;q=0.2', 'Accept-Encoding'='gzip, deflate, sdch, br', 'Accept'='text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'user_agent'='Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36', 'Cookie'='urlJumpIp=1; urlJumpIpByTxt=%E5%8F%B0%E5%8C%97%E5%B8%82;'))
+
+#}
+
 batch.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region=1, section="4,10,11,27", kind2=1, rentprice.more="2,3,4", area="10,30", sex="0",
                        first.row=NULL, total.rows=NULL, each.query.row=30) {
 	# inital query

@@ -8,6 +8,10 @@ fluidPage(
 	title = "591 Crawler",
 	tabPanel("Candidates", DT::dataTableOutput("table")),
 	tabPanel("Discards", DT::dataTableOutput("tableSelected")), 
-	tabPanel("Summary Plot", plotOutput("scatterPlot"))
+	tabPanel("Summary Plot", plotOutput("scatterPlot")),
+	tabPanel("Update", 
+			 actionButton("goButton", "Insert discards"),
+			 br(),
+			 DT::dataTableOutput("tableSelectedDone"))
   )
 )

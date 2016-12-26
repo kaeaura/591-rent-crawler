@@ -2,23 +2,26 @@ library(shiny)
 library(ggplot2)
 theme_set(theme_bw())
 
-function(input, output) {
+function(input, output, session) {
 
     # Filter data based on selections
-    output$table <- DT::renderDataTable(DT::datatable({
-        data <- batch.res.data
-        if (input$section != "All") {
-            data <- data[data$section_name == input$section,]
-        }
-        if (input$region != "All") {
-            data <- data[data$region_name == input$cyl,]
-        }
-        data
-    }))
+	output$table <- DT::renderDataTable(DT::datatable(batch.res.data, options = list(pageLength=10)))
+
+	table_selected <- reactive({
+		ids <- input$table_rows_selected
+		batch.res.data[ids,]
+	})
+
+	output$tableSelected <- DT::renderDataTable({
+		DT::datatable(
+					  table_selected(),
+					  selection = list(mode = "multiple"),
+					  caption = "Selected Rows from Original Data Table"
+					  )
+	})
 
 	output$scatterPlot <- renderPlot({
 		s <- input$table_rows_selected
-		message(s)
 		data <- batch.res.data
 		g <- ggplot(data, aes(x=area, y=price, shape=section_name)) + geom_point(size=3)
 		if (length(s)) {

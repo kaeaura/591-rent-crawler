@@ -8,10 +8,13 @@ library('dplyr')
 
 source('utility.R')
 
-rent.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region=1, section="4,10,11,27", kind2=1, rentprice.more="2,3,4", area="10,30", sex="0",
+rent.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region=1, section="4", kind2=1, rentprice.more="2,3,4", area="10,30", sex="0",
                        first.row=NULL, total.rows=NULL) {
     # test.run
+	# 台北
     # https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=1&region=1&section=10&kind=1&rentpriceMore=2,3&sex=0
+	# 新北 汐止
+	# https://rent.591.com.tw/home/search/rsList?is_new_list=1&type=1&kind=0&searchtype=1&region=1&section=27&kind=1&rentpriceMore=2,3&sex=0&area=20,30
 
     # region
 
@@ -65,55 +68,101 @@ rent.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region
                 
 }
 
+batch.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, region=1, section="4,10,11,27", kind2=1, rentprice.more="2,3,4", area="10,30", sex="0",
+                       first.row=NULL, total.rows=NULL, each.query.row=30) {
+	# inital query
+	init.res <- rent.query(url=target.url,
+						   is.new.list=is.new.list,
+						   type=type,
+						   kind=kind, 
+						   search.type=search.type,
+						   region=region,
+						   section=section,
+						   kind2=kind2,
+						   rentprice.more=rentprice.more,
+						   area=area,
+						   sex=sex)
+
+	init.status <- httr::status_code(init.res)
+	init.cont <- httr::content(init.res, "text") %>% jsonlite::fromJSON()
+
+	# there is a magic number here. it may change in furture version(?)
+	# extract the total record
+	if (is.null(init.cont$data$page)) {
+		return(list(status_code=NULL, parsed.content=NULL))
+	}
+	
+	total.records <- init.cont$data$page %>% 
+		read_html() %>% 
+		html_nodes('span') %>% 
+		extract2(5) %>% 
+		html_text() %>% 
+		as.numeric()
+
+	# crawl the results
+	batch.res <- lapply(seq(from=0, to=total.records, by=each.query.row),
+						function(fr) {
+							message(sprintf('row.index: %d, total: %d', fr, total.records))
+							r <- rent.query(url=target.url,
+											first.row=fr,
+											total.rows=total.records,
+											is.new.list=is.new.list,
+											type=type,
+											kind=kind, 
+											search.type=search.type,
+											region=region,
+											section=section,
+											kind2=kind2,
+											rentprice.more=rentprice.more,
+											area=area,
+											sex=sex)
+							message(sprintf('status code: %d', status_code(r)))
+							return(list(status=status_code(r), parsed.content=content(r, "text") %>% jsonlite::fromJSON()))
+						})
+
+	if (any(sapply(batch.res, function(r) r$status) == F)) {
+		message('Warning: crawling incomplete')
+	}
+
+	return(batch.res)
+}
+
+extract_content <- function(res) {
+	data <- lapply(res, function(res) { res$parsed.content$data$data }) %>% discard.null.elt()
+
+	if (length(data)) {
+		data1 <- data %>% 
+			ldply(.id='page.index') %>% 
+			dplyr::filter(closed == 0) %>% 
+			dplyr::mutate(url = get.detail.url(id),
+						  posttime.digit = extract.digits(posttime) %>% as.integer(),
+						  posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels)) %>%
+			dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, region_name, section_name, fulladdress, url,
+							id, user_id, post_id, checkstatus, status, closed) %>%
+			dplyr::distinct(id, .keep_all=T) %>%
+			dplyr::arrange(posttime.unit, posttime.digit)
+		return(data1)
+	} else {
+		return(NULL)
+	}
+}
+
 # global var
 target.url <- 'https://rent.591.com.tw/home/search/rsList'
-output.dir <- '../result/'
+# output setting
+crawler.dir <- '../result/crawler'
+if (!file.exists(crawler.dir) || !file.info(crawler.dir)$isdir)
+	dir.create(crawler.dir, recursive = T)
 
-# inital query
-init.res <- rent.query(url=target.url)
-init.status <- httr::status_code(init.res)
-init.cont <- httr::content(init.res, "text") %>% jsonlite::fromJSON()
+# query
+#section.candidates <- c("4", "10", "11", "27")
+section.candidates <- c("4", "27")
 
-# there is a magic number here. it may change in furture version(?)
-# extract the total record
-total.records <- init.cont$data$page %>% 
-                 read_html() %>% 
-                 html_nodes('span') %>% 
-                 extract2(5) %>% 
-                 html_text() %>% 
-                 as.numeric()
+data <- lapply(section.candidates, function(sc) { batch.query(url = target.url, section= sc) %>% extract_content() }) %>% discard.null.elt() %>% ldply()
 
-# crawl the results
-step.width <- 30
-first.rows <- seq(from=0, to=total.records, by=step.width)
-
-batch.res <- lapply(first.rows,
-                    function(fr) {
-                        message(sprintf('row.index: %d, total: %d', fr, total.records))
-                        r <- rent.query(url=target.url, first.row=fr, total.rows=total.records)
-                        message(sprintf('status code: %d', status_code(r)))
-                        return(list(status=status_code(r), parsed.content=content(r, "text") %>% jsonlite::fromJSON()))
-                    })
-
-batch.res.data <- lapply(batch.res, function(res) { res$parsed.content$data$data }) %>% 
-                  ldply(.id='page.index') %>% 
-                  dplyr::filter(closed == 0) %>% 
-                  dplyr::mutate(url = get.detail.url(id),
-                                posttime.digit = extract.digits(posttime) %>% as.integer(),
-                                posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels)) %>%
-                  dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, region_name, section_name, fulladdress, url,
-                                id, user_id, post_id, checkstatus, status, closed) %>%
-                  dplyr::distinct(id, .keep_all=T) %>%
-                  dplyr::arrange(posttime.unit, posttime.digit)
-
-# store the result and upload to google drive
-file.name <- file.path(output.dir, sprintf('591_candidates_%s.csv', Sys.time() %>% strftime('%F %H:%M')))
-write.csv(batch.res.data, file=file.name, row.names=F)
-
-# register the key
-#gs_upload(file.name, sheet_title='file.name')
-
-#g <- gs_new('candidates', ws_title='591Candidates', input=batch.res.data, trim=T, verbose=F)
-# Key: 1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs
-# Alternate key: 1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs
-# Browser URL: https://docs.google.com/spreadsheets/d/1_eDR9hmCP85AHQpr2RqU9J7ji3O2_s6eYzJdlLQLIQs/
+# output file
+if (F) {
+	write.csv(data,
+			  file=file.path(crawler.dir, sprintf('591_candidates_%s.csv', Sys.time())),
+			  row.names=F)
+}

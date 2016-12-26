@@ -16,3 +16,7 @@ extract.strings <- function(s) {
     digit.part <- gsub('[0-9]', "", s)
     return(digit.part)
 }
+
+discard.null.elt <- function(l) {
+    l[!sapply(l, is.null)]
+}

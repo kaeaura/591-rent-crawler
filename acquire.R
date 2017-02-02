@@ -164,16 +164,16 @@ extract_content <- function(res) {
 # global var
 target.url <- 'https://rent.591.com.tw/home/search/rsList'
 # output setting
-crawler.dir <- '../result/crawler'
+crawler.dir <- './result/crawler'
 if (!file.exists(crawler.dir) || !file.info(crawler.dir)$isdir)
 	dir.create(crawler.dir, recursive = T)
-discards.dir <- '../result/shinyoutput_discards'
+discards.dir <- './result/shinyoutput_discards'
 if (!file.exists(discards.dir) || !file.info(discards.dir)$isdir)
 	dir.create(discards.dir)
 discards.fn.prefix <- 'shinyoutput_discards'
 
 # query
-section.candidates <- c("4", "10", "11", "27")
+section.candidates <- c("10", "11")
 collection <- lapply(section.candidates,
                      function(sc) {
                         message('acquring section = ', sc)

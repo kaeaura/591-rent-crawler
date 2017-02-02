@@ -151,8 +151,7 @@ extract_content <- function(res) {
 						  posttime.digit = extract.digits(posttime) %>% as.integer(),
 						  posttime.unit = extract.strings(posttime) %>% factor(levels=posttime.units.levels),
                           price.per.area = as.integer(as.integer(gsub(",", "", price)) / as.numeric(area))) %>%
-			dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, price.per.area, region_name, section_name, fulladdress, url,
-							id, user_id, post_id, checkstatus, status, closed) %>%
+			dplyr::select(posttime, posttime.digit, posttime.unit, browsenum, room, area, price, price.per.area, region_name, section_name, fulladdress, url, id, user_id, post_id, checkstatus, status, closed) %>%
 			dplyr::distinct(id, .keep_all=T) %>%
 			dplyr::arrange(posttime.unit, posttime.digit)
 		return(data1)

@@ -22,7 +22,7 @@ function(input, output, session) {
 
 	# Interactive
 	# candaidates
-	output$table <- DT::renderDataTable(DT::datatable(collection, options = list(pageLength=10)))
+	output$table <- DT::renderDataTable(DT::datatable(collection, escape = FALSE, options = list(pageLength=10)))
 
 	# preview
 	output$tableSelected <- DT::renderDataTable({

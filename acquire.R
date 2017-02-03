@@ -25,54 +25,56 @@ if (!file.exists(discards.dir) || !file.info(discards.dir)$isdir)
 # query parameter
 desired_section <- c("10", "11")
 desired_region <- 1
-
-desired_rent <- "2,3,4"
+desired_rent <- c("2", "3", "4")
 # rent price: 
 #rentpriceMore 租金
 # 2: 5k - 10k
 # 3: 10k - 20k
 # 4: 20k - 30k
-desired_area <- "10,30"
-desired_sex <- 0
+desired_area_range <- c("10, 30")
+desired_gender_rest <- 0
 
-# TO BE MODIFIED
 GetoptLong(
-		   "desired_section|section|s=s", "desired section, default by 10 and 11",
-		   "desired_region|region|r=i", "region, default = 1",
-		   "desired_area|area|a=s", "area, default = '10,30'",
-		   "desired_rent|rent|r=s", "rent, default='2,3,4', indicating $5k--$30k",
-		   "desired_sex|sex|x=s", "sex, default=0",
+		   "desired_section|section|s=s@", "desired sections, default by 10 and 11 (i.e. -s 10 -s 11)",
+		   "desired_region|region|r=i", "desired sections region, default = 1",
+		   "desired_area_range|area|a=s{2}", "area range, 10, 20, 30, 40. default = '10,30'",
+		   "desired_rent|rent|r=s@", "rent, default='2,3,4', indicating $5k--$30k",
+		   "desired_gender_rest|gender|g=s", "gender restriction, default = 0",
 		   "verbose", "print messages",
 		   foot = "Please contact kaeaura@gmail.com for comments"
 )
 
-qqcat("desired_section=@{desired_section}\n")
-#qqcat("desired_region=@{desired_region}")
-#qqcat("desired_area=@{desired_area}")
-#qqcat("desired_rent=@{desired_rent}")
-#qqcat("desired_sex=@{desired_sex}")
+if (verbose) {
+	qqcat("desired_section=@{desired_section}\n--\n")
+	qqcat("desired_region=@{desired_region}\n--\n")
+	qqcat("desired_area_range=@{desired_area_range}\n--\n")
+	qqcat("desired_rent=@{desired_rent}\n--\n")
+	qqcat("desired_gender_rest=@{desired_gender_rest}\n--\n")
+}
 
-stopifnot(1==2)
 collection <- lapply(desired_section,
-                     function(sc) {
-                        message('acquring section = ', sc)
-                        batch.query(url = target.url,
-								    section = sc,
-									region = desired_region,
-									area = desired_area,
-									rentprice.more = desired_rent,
-									sex = desired_sex,
-									) %>%
-                        extract_content() 
-                    }) %>% 
-               discard.null.elt() %>%
-               ldply()
+					 function(sc) {
+						 if (verbose) message('acquring section = ', sc)
+						 batch.query(url = target.url,
+									 section = sc,
+									 region = desired_region,
+									 area = paste(desired_area_range, collapse=","),
+									 rentprice.more = paste(desired_rent, collapse=","),
+									 sex = desired_gender_rest
+									 ) %>%
+						 extract_content() 
+					 }) %>%
+			 discard.null.elt() %>% 
+			 ldply()
+
+#head(collection) %>% head() %>% print()
+
+message('We crawl ', nrow(collection), ' records from 591 website.')
 
 # discarding unwanted cases
 discards.fl <- list.files(discards.dir, '.csv', full.name=T)
 if (length(discards.fl)) {
     discards <- lapply(discards.fl, read.csv) %>% ldply() %>% distinct(id, .keep_all=T)
-    message('we crawl ', nrow(collection), ' records from 591.')
     message('there are ', length(unique(discards$id)),  ' discards')
     collection <- dplyr::filter(collection, !(id %in% discards$id))
     message('It leaves ', nrow(collection), ' records after this carwl')

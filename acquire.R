@@ -14,6 +14,7 @@ source('utility.R')
 # global var
 target.url <- 'https://rent.591.com.tw/home/search/rsList'
 crawler.dir <- './result/crawler'
+crawler.file <- file.path(crawler.dir, 'candidates_cached.csv')
 discards.dir <- './result/shinyoutput_discards'
 discards.fn.prefix <- 'shinyoutput_discards'
 # create the directory
@@ -79,8 +80,6 @@ if (length(discards.fl)) {
 }
 
 # output file
-if (F) {
-	write.csv(data,
-			  file=file.path(crawler.dir, sprintf('591_candidates_%s.csv', Sys.time())),
-			  row.names=F)
+if (T) {
+	write.csv(collection, file = crawler.file, row.names = F)
 }

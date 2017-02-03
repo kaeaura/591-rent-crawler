@@ -5,24 +5,35 @@ source('acquire.R')
 
 function(input, output, session) {
 
+    data <- reactivePoll(1000, session,
+                         checkFunc = function() {
+                             if (file.exists(crawler.file))
+                                 file.info(crawler.file)$mtime[1]
+                             else
+                                 ""
+                         },
+                         valueFunc = function() {
+                             read.csv(crawler.file)
+                         })
+
 	# Functions
 	table_selected <- reactive({
 		ids <- input$table_rows_selected
-		collection[ids,]
+		data()[ids,]
 	})
 
 	table_not_selected <- reactive({
 		ids <- input$table_rows_selected
-		collection[setdiff(1:nrow(collection), ids),]
+		data()[setdiff(1:nrow(data()), ids),]
 	})
 
 	rtext <- eventReactive(input$goButton, { 
-		sprintf("Updated, %d records remained", nrow(collection))
+		sprintf("Updated, %d records remained", nrow(data()))
 	})
 
 	# Interactive
 	# candaidates
-	output$table <- DT::renderDataTable(DT::datatable(collection, escape = FALSE, options = list(pageLength=10)))
+	output$table <- DT::renderDataTable(DT::datatable(data(), escape = FALSE, options = list(pageLength=10)))
 
 	# preview
 	output$tableSelected <- DT::renderDataTable({
@@ -44,8 +55,8 @@ function(input, output, session) {
 		input$goButton
 		discard.ids <- done$x$data$id
 
-		# update the collection
-		collection <<- dplyr::filter(collection, !(id %in% discard.ids))
+		# update the data()
+		data() <<- dplyr::filter(data(), !(id %in% discard.ids))
 
 		# output the discard records
 		write.csv(done$x$data,
@@ -57,8 +68,8 @@ function(input, output, session) {
 
 	output$scatterPlot <- renderPlot({
 		s <- input$table_rows_selected
-		data <- collection
-		g <- ggplot(data, aes(x=area, y=price)) + geom_point(size=3) + theme(text = element_text(family = 'STXihei'))
+		pdata <- data()
+		g <- ggplot(pdata, aes(x=area, y=price)) + geom_point(size=3) + theme(text = element_text(family = 'STXihei'))
 		if (length(s)) {
         	g <- g + geom_point(data = data[s,], colour='red', size=6)
 		}

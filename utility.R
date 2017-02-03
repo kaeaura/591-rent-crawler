@@ -114,7 +114,7 @@ batch.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, regio
 						   sex=sex)
 
 	init.status <- httr::status_code(init.res)
-	init.cont <- httr::content(init.res, type="text", encoding="UTF-8") %>% jsonlite::fromJSON()
+	init.cont <- httr::content(init.res, "text", encoding="UTF-8") %>% jsonlite::fromJSON()
 
     # if no result returns, then break and get a null list
 	if (is.null(init.cont$data$page)) {
@@ -149,7 +149,7 @@ batch.query <- function(url, is.new.list=1, type=1, kind=0, search.type=1, regio
 											sex=sex)
 							message(sprintf('status code: %d', status_code(r)))
 							return(list(status=status_code(r),
-										parsed.content=content(r, type="text", encoding="UTF-8") %>% jsonlite::fromJSON()
+										parsed.content=content(r, "text", encoding="UTF-8") %>% jsonlite::fromJSON()
 								       )
 								  )
 						})

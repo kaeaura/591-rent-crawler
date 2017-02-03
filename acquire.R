@@ -39,7 +39,7 @@ GetoptLong(
 		   "desired_region|region|r=i", "desired sections region, default = 1",
 		   "desired_area_range|area|a=s{2}", "area range, 10, 20, 30, 40. default = '10,30'",
 		   "desired_rent|rent|r=s@", "rent, default='2,3,4', indicating $5k--$30k",
-		   "desired_gender_rest|gender|g=s", "gender restriction, default = 0",
+		   "desired_gender_rest|gender|g=s", "gender restriction where 0 = none, 1 = male only, 2 = female only, default = 0",
 		   "verbose", "print messages",
 		   foot = "Please contact kaeaura@gmail.com for comments"
 )
@@ -67,8 +67,6 @@ collection <- lapply(desired_section,
 			 discard.null.elt() %>% 
 			 ldply()
 
-#head(collection) %>% head() %>% print()
-
 message('We crawl ', nrow(collection), ' records from 591 website.')
 
 # discarding unwanted cases
@@ -77,7 +75,7 @@ if (length(discards.fl)) {
     discards <- lapply(discards.fl, read.csv) %>% ldply() %>% distinct(id, .keep_all=T)
     message('there are ', length(unique(discards$id)),  ' discards')
     collection <- dplyr::filter(collection, !(id %in% discards$id))
-    message('It leaves ', nrow(collection), ' records after this carwl')
+    message('After filtering discarded items, it leaves ', nrow(collection), ' records')
 }
 
 # output file

@@ -79,5 +79,24 @@ if (length(discards.fl)) {
     message('After filtering discarded items, it leaves ', nrow(collection), ' records')
 }
 
-# output file
+# update news
+if (file.exists(crawler.file)) {
+    previous.collection <- read.csv(crawler.file)
+} else {
+    previous.collection <- collection[numeric(0),]
+}
+
+add <- setdiff(collection$post_id, previous.collection$post_id)
+remove <- setdiff(previous.collection$post_id, collection$post_id)
+update <- intersect(previous.collection$post_id, collection$post_id)
+
+slack.message <- sprintf('Query complete at %s.\n Among the acquired posts, there are %d new posts, %d old posts, and %d updated posts',
+                          Sys.time(), length(add), length(remove), length(update))
+slackme(slack.message)
+if (length(add)) slackme(capture.output(print(dplyr::filter(collection, post_id %in% add)))
+
+# header of the content
+slack.message2 <- collection %>% dplyr::select(posttime, fulladdress, url) %>% head(3) %>% print() %>% capture.output() %>% paste(collapse="\n")
+
+# update new posts
 write.csv(collection, file = crawler.file, row.names = F)

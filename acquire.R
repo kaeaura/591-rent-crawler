@@ -32,7 +32,7 @@ desired_rent <- c("2", "3", "4")
 # 2: 5k - 10k
 # 3: 10k - 20k
 # 4: 20k - 30k
-desired_area_range <- c("10, 30")
+desired_area_range <- c(10, 30)
 desired_gender_rest <- 0
 
 GetoptLong(
@@ -80,6 +80,4 @@ if (length(discards.fl)) {
 }
 
 # output file
-if (T) {
-	write.csv(collection, file = crawler.file, row.names = F)
-}
+write.csv(collection, file = crawler.file, row.names = F)

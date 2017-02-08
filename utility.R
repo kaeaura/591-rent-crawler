@@ -1,4 +1,4 @@
-
+# handle time units from 591 service
 posttime.units.levels <- c('分鐘內', '小時內', '昨日', '天前')
 
 get.detail.url <- function(url.id) {
@@ -19,7 +19,8 @@ extract.digits <- function(s, do.strip=F) {
 }
 
 discard.null.elt <- function(l) {
-    l[!sapply(l, is.null)]
+    # discard empty element or null element
+    l[!sapply(l, is.null) & !sapply(l, length)==0]
 }
 
 # 591 query api

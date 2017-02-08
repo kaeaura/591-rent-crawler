@@ -93,10 +93,11 @@ update <- intersect(previous.collection$post_id, collection$post_id)
 slack.message <- sprintf('Query complete at %s.\n Among the acquired posts, there are %d new posts, %d old posts, and %d updated posts',
                           Sys.time(), length(add), length(remove), length(update))
 slackme(slack.message)
-if (length(add)) slackme(capture.output(print(dplyr::filter(collection, post_id %in% add)))
+if (length(add)) slackme(capture.output(print(dplyr::filter(collection, post_id %in% add))))
 
-# header of the content
+# show the latest updates
 slack.message2 <- collection %>% dplyr::select(posttime, fulladdress, url) %>% head(3) %>% print() %>% capture.output() %>% paste(collapse="\n")
+slackme(slack.message2)
 
 # update new posts
 write.csv(collection, file = crawler.file, row.names = F)

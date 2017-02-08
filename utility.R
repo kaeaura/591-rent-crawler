@@ -1,4 +1,15 @@
 # handle time units from 591 service
+# global var
+target.url <- 'https://rent.591.com.tw/home/search/rsList'
+crawler.dir <- './result/crawler'
+crawler.file <- file.path(crawler.dir, 'candidates_cached.csv')
+discards.dir <- './result/shinyoutput_discards'
+discards.fn.prefix <- 'shinyoutput_discards'
+# create the directory
+if (!file.exists(crawler.dir) || !file.info(crawler.dir)$isdir)
+	dir.create(crawler.dir, recursive = T)
+if (!file.exists(discards.dir) || !file.info(discards.dir)$isdir)
+	dir.create(discards.dir)
 posttime.units.levels <- c('分鐘內', '小時內', '昨日', '天前')
 
 get.detail.url <- function(url.id) {

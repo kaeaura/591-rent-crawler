@@ -5,7 +5,7 @@ library(ggplot2)
 fluidPage(
 
   navbarPage("Rent candidates", 
-	title = "591 Crawler",
+	title = "591 DormSeeker",
 	tabPanel("Candidates", DT::dataTableOutput("table")),
 	tabPanel("Preview", DT::dataTableOutput("tableSelected")), 
 	tabPanel("Summary Plot", plotOutput("scatterPlot")),

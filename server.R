@@ -24,25 +24,26 @@ function(input, output, session) {
 
 	table_not_selected <- reactive({
 		ids <- input$table_rows_selected
-		data()[setdiff(1:nrow(data()), ids),]
+		collect[setdiff(1:nrow(collect), ids),]
 	})
 
 	rtext <- eventReactive(input$goButton, { 
-		sprintf("Updated, %d records remained", nrow(data()))
+		sprintf("Updated, %d records remained", nrow(collect))
 	})
 
 	# Interactive
 	# candaidates
-	output$table <- DT::renderDataTable(DT::datatable(data(), escape = FALSE, options = list(pageLength=10)))
+	output$table <- DT::renderDataTable({
+        DT::datatable(data(), escape = FALSE, options = list(pageLength=5))
+    })
 
 	# preview
 	output$tableSelected <- DT::renderDataTable({
-		DT::datatable(
-					  table_selected(),
+		DT::datatable(table_selected(),
 					  selection = list(mode = "multiple"),
+                      escape = FALSE,
 					  caption = "Selected Rows from Original Data Table",
-					  options = list(paging=F)
-					  )
+					  options = list(paging=F))
 	})
 	# update
 	output$tableSelectedDone <- DT::renderDataTable({
